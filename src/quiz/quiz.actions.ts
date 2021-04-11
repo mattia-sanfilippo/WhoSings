@@ -1,7 +1,8 @@
 import axios, {AxiosResponse} from 'axios';
 import {MUSIXMATCH_API_URL, MUSIXMATCH_API_KEY} from '@env';
-import {Artist, Tracks} from './quiz.types';
-import {GET_SNIPPETS, GET_TRACKS} from './quiz.constants';
+import {Artist, Tracks, TrackSnippet} from './quiz.types';
+import {GET_QUESTIONS, GET_SNIPPETS, GET_TRACKS} from './quiz.constants';
+import pickShuffled from '../../src/shared/utils/pickShuffled';
 
 export const getTracks = () => {
   return function (dispatch: any) {
@@ -49,6 +50,46 @@ export const getSnippets = (tracks: Tracks) => {
       .catch((error) => {
         dispatch(setSnippets([], [], error));
       });
+  };
+};
+
+export const getQuestions = (snippets: TrackSnippet[], artists: Artist[]) => {
+  const questions = snippets.map((snippet): any => {
+    const randomArtists = pickShuffled(artists, 2);
+    const randomAnswers = randomArtists.map((randomArtist) => {
+      return {
+        artist: {
+          id: randomArtist.id,
+          name: randomArtist.name,
+        },
+        correct: randomArtist.id === snippet.artist.id ? true : false,
+      };
+    });
+    return {
+      text: snippet.body,
+      answers: pickShuffled(
+        [
+          ...randomAnswers,
+          {
+            artist: {id: snippet.artist.id, name: snippet.artist.name},
+            correct: true,
+          },
+        ],
+        3,
+      ),
+    };
+  });
+
+  return function (dispatch: any) {
+    dispatch(setQuestions(questions));
+  };
+};
+
+const setQuestions = (data: any, error?: Error) => {
+  return {
+    type: GET_QUESTIONS,
+    payload: data,
+    failure: error,
   };
 };
 

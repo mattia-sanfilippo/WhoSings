@@ -1,14 +1,16 @@
-import {GET_SNIPPETS, QUESTIONS_NUMBER} from '../quiz.constants';
-import {TrackSnippet} from '../quiz.types';
+import {GET_QUESTIONS, GET_SNIPPETS, QUESTIONS_NUMBER} from '../quiz.constants';
+import {Questions, TrackSnippet} from '../quiz.types';
 
 export type QuizState = {
   snippets: TrackSnippet[];
+  questions: Questions;
   loading: boolean;
   failure?: Error;
 };
 
 const initialState: QuizState = {
   snippets: [],
+  questions: [],
   loading: true,
   failure: undefined,
 };
@@ -38,9 +40,14 @@ export const quizBeginReducer = (
     case GET_SNIPPETS:
       return {
         ...state,
-        loading: false,
-        failure: action.failure,
         snippets: mapSnippets(action.payload),
+      };
+    case GET_QUESTIONS:
+      return {
+        ...state,
+        loading: false,
+        failure: undefined,
+        questions: action.payload,
       };
     default:
       return {
