@@ -1,74 +1,156 @@
-import React, {useEffect} from 'react';
-import {Card, Layout, Text} from '@ui-kitten/components';
+import React, {useEffect, useState} from 'react';
+import {Button, Card, Layout, Text} from '@ui-kitten/components';
 import {View} from 'react-native';
 import {styles} from './styles';
 import {useDispatch, useSelector} from 'react-redux';
 import {RootState} from 'src/shared/store/configureStore';
-import {getSnippets} from '../quiz.actions';
-import {Artist, Questions, TrackSnippet} from '../quiz.types';
-import {pickShuffled} from 'src/shared/utils/pickShuffled';
+import {getQuestions, getSnippets} from '../quiz.actions';
+import {Answer} from '../quiz.types';
+import feedbackPresenter from '../../shared/utils/feedbackPresenter';
+import {useNavigation} from '@react-navigation/native';
 
 type QuizAnswerProps = {
-  answer: string;
-  correct?: boolean;
+  answer: Answer;
+  onPress: () => void;
 };
 
-const QuizAnswer = ({answer, correct}: QuizAnswerProps) => {
-  const status = correct ? 'success' : 'basic';
+const Answers = (props: {renderAnswers: () => JSX.Element[]}) => {
+  return <View style={styles.quizContainer}>{props.renderAnswers()}</View>;
+};
+
+const QuizAnswer = ({answer, onPress}: QuizAnswerProps) => {
   return (
-    <Card status={status} style={styles.quizCard}>
+    <Card onPress={onPress} style={styles.quizCard}>
       <View style={styles.cardContent}>
-        <Text>{answer}</Text>
+        <Text>{answer.artist.name}</Text>
       </View>
     </Card>
   );
 };
 
-const generateQuestions = (
-  snippets: TrackSnippet[],
-  artists: Artist[],
-): Questions => {
-  return snippets.map((snippet): any => {
-    const randomArtists = pickShuffled(artists, 2);
-    const randomAnswers = randomArtists.map((randomArtist) => {
-      return {
-        text: randomArtist.name,
-        correct: randomArtist.id === snippet.artist.id ? true : false,
-      };
-    });
-    return {
-      text: snippet.body,
-      answers: pickShuffled(
-        [...randomAnswers, {text: snippet.artist.name, correct: true}],
-        3,
-      ),
-    };
-  });
+const Loading = () => {
+  return <Text>Loading...</Text>;
+};
+
+const Failure = () => {
+  return <Text>Something bad happened.</Text>;
+};
+
+const showFeedback = (correct: boolean) => {
+  correct
+    ? feedbackPresenter('success', 'Correct', 'You rock!')
+    : feedbackPresenter('error', 'Wrong answer', 'Focus on it!');
+};
+
+const Timer = (props: {counter: number}) => {
+  return (
+    <Text category="h6" appearance="hint">
+      {props.counter}
+    </Text>
+  );
+};
+
+const Question = (props: {question: string; counter: number}) => {
+  return (
+    <Card style={styles.mainCard} disabled>
+      <View style={styles.cardContent}>
+        <Text category="h5">{props.question}</Text>
+        <Timer counter={props.counter} />
+      </View>
+    </Card>
+  );
 };
 
 export const QuizBegin = () => {
   const {tracks, artists} = useSelector((state: RootState) => state.quiz);
-  const {snippets, loading, failure} = useSelector(
+  const {snippets, questions, loading, failure} = useSelector(
     (state: RootState) => state.quizBegin,
   );
 
+  const [currentPhase, setCurrentPhase] = useState(0);
+  const [points, setPoints] = useState(0);
+  const [counter, setCounter] = useState(10);
+
   const dispatch = useDispatch();
+  const navigation = useNavigation();
 
   useEffect(() => {
     dispatch(getSnippets(tracks));
   }, [dispatch, tracks]);
 
+  useEffect(() => {
+    if (snippets.length !== 0) {
+      dispatch(getQuestions(snippets, artists));
+    }
+  }, [artists, dispatch, snippets]);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCounter(counter - 1);
+    }, 1000);
+    if (counter === 0 && questions[currentPhase] != null) {
+      setCounter(10);
+      setCurrentPhase(currentPhase + 1);
+      showFeedback(false);
+    } else if (counter === 0) {
+      clearInterval(interval);
+    }
+    return () => clearInterval(interval);
+  }, [counter, currentPhase, questions]);
+
   if (loading) {
-    return <Text>Loading...</Text>;
+    return <Loading />;
   }
 
   if (failure) {
-    return <Text>Something bad happened.</Text>;
+    return <Failure />;
   }
 
-  const questions = generateQuestions(snippets, artists);
+  const answerQuestion = (correct: boolean) => {
+    setCounter(10);
+    setCurrentPhase(currentPhase + 1);
+    showFeedback(correct);
+    if (correct) {
+      setPoints(points + 1);
+    }
+  };
 
-  console.log(questions);
+  const onPressButton = () => {
+    navigation.navigate('Quiz');
+  };
+
+  const renderQuizEnd = () => {
+    return (
+      <View style={styles.cardContent}>
+        <Text category="h4">Quiz ended!</Text>
+        <Text category="h5">Your score of {points} has been saved.</Text>
+        <Button style={styles.startButton} onPress={onPressButton}>
+          TRY AGAIN
+        </Button>
+      </View>
+    );
+  };
+
+  const renderCurrentPhaseAnswers = () => {
+    return questions[currentPhase].answers.map((answer) => {
+      return (
+        <QuizAnswer
+          answer={answer}
+          onPress={() => answerQuestion(answer.correct)}
+        />
+      );
+    });
+  };
+
+  const renderCurrentPhaseBody = () => {
+    const question = questions[currentPhase].text;
+    return (
+      <Layout level="1">
+        <Question question={question} counter={counter} />
+        <Answers renderAnswers={renderCurrentPhaseAnswers} />
+      </Layout>
+    );
+  };
 
   return (
     <Layout level="3">
@@ -76,18 +158,9 @@ export const QuizBegin = () => {
         <Text category="h1" style={styles.title}>
           Who Sings?
         </Text>
-        <Layout level="1">
-          <Card style={styles.mainCard} disabled>
-            <View style={styles.cardContent}>
-              <Text category="h6">LYRICS</Text>
-            </View>
-          </Card>
-          <View style={styles.quizContainer}>
-            <QuizAnswer answer="ARTIST 1" />
-            <QuizAnswer answer="ARTIST 2" correct />
-            <QuizAnswer answer="ARTIST 3" />
-          </View>
-        </Layout>
+        {questions[currentPhase] != null
+          ? renderCurrentPhaseBody()
+          : renderQuizEnd()}
       </Layout>
     </Layout>
   );
