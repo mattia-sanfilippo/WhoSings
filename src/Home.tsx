@@ -12,6 +12,7 @@ import {Leaderboard} from './leaderboard/views/Leaderboard';
 import {Profile} from './profile/views/Profile';
 import {createStackNavigator} from '@react-navigation/stack';
 import {QuizBegin} from './quiz/views/QuizBegin';
+import Toast from 'react-native-toast-message';
 
 const {Navigator, Screen} = createBottomTabNavigator();
 
@@ -57,5 +58,6 @@ const TabNavigator = () => (
 export const AppNavigator = () => (
   <NavigationContainer>
     <TabNavigator />
+    <Toast ref={(ref) => Toast.setRef(ref)} />
   </NavigationContainer>
 );
