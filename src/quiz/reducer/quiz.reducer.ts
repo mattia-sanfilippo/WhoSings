@@ -1,6 +1,6 @@
 import {Artist, Tracks} from './../quiz.types';
 import {GET_TRACKS, QUESTIONS_NUMBER} from './../quiz.constants';
-import {pickShuffled} from 'src/shared/utils/pickShuffled';
+import pickShuffled from '../../../src/shared/utils/pickShuffled';
 
 export type QuizState = {
   tracks: Tracks;
