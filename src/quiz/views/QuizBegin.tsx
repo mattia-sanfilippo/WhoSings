@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useState} from 'react';
 import {Button, Card, Layout, Text} from '@ui-kitten/components';
 import {View} from 'react-native';
 import {styles} from './styles';
@@ -16,16 +16,21 @@ type QuizAnswerProps = {
 
 const submitRank = async (nickname: string, points: number) => {
   try {
-    const result = await AsyncStorage.getItem('@leaderboard');
-    if (result) {
-      let rank = JSON.parse(result);
-      if (!rank) {
-        rank = [];
-      }
-      rank.push({nickname, points});
+    const result = await AsyncStorage.getItem('leaderboard');
+    let rank = [];
+    if (result !== null) {
+      rank = JSON.parse(result);
     }
+    rank.push({nickname, points});
+    await AsyncStorage.setItem('leaderboard', JSON.stringify(rank));
+    feedbackPresenter(
+      'success',
+      'Saving successful',
+      'Your score has been saved in the leaderboard!',
+    );
   } catch (error) {
     feedbackPresenter('error', 'Error', "Couldn't save your points.");
+    console.log(error);
   }
 };
 
@@ -76,6 +81,18 @@ const Question = (props: {question: string; counter: number}) => {
   );
 };
 
+const QuizEndView = (props: {points: number; onPressButton: () => void}) => {
+  return (
+    <View style={styles.cardContent}>
+      <Text category="h4">Quiz ended!</Text>
+      <Text category="h5">Your score of {props.points} has been saved.</Text>
+      <Button style={styles.startButton} onPress={props.onPressButton}>
+        SUBMIT SCORE
+      </Button>
+    </View>
+  );
+};
+
 export const QuizBegin = ({route, navigation}: any) => {
   const {tracks, artists} = useSelector((state: RootState) => state.quiz);
   const {snippets, questions, loading, failure} = useSelector(
@@ -111,8 +128,15 @@ export const QuizBegin = ({route, navigation}: any) => {
     } else if (counter === 0) {
       clearInterval(interval);
     }
-    return () => clearInterval(interval);
-  }, [counter, currentPhase, questions]);
+    return () => {
+      clearInterval(interval);
+    };
+  }, [counter, currentPhase, nickname, points, questions]);
+
+  const onPressButton = useCallback(() => {
+    submitRank(nickname, points);
+    navigation.navigate('Quiz');
+  }, [navigation, nickname, points]);
 
   if (loading) {
     return <Loading />;
@@ -122,6 +146,10 @@ export const QuizBegin = ({route, navigation}: any) => {
     return <Failure />;
   }
 
+  if (questions[currentPhase] == null) {
+    return <QuizEndView points={points} onPressButton={onPressButton} />;
+  }
+
   const answerQuestion = (correct: boolean) => {
     setCounter(10);
     setCurrentPhase(currentPhase + 1);
@@ -129,23 +157,6 @@ export const QuizBegin = ({route, navigation}: any) => {
     if (correct) {
       setPoints(points + 1);
     }
-  };
-
-  const onPressButton = () => {
-    navigation.navigate('Quiz');
-  };
-
-  const renderQuizEnd = () => {
-    submitRank(nickname, points);
-    return (
-      <View style={styles.cardContent}>
-        <Text category="h4">Quiz ended!</Text>
-        <Text category="h5">Your score of {points} has been saved.</Text>
-        <Button style={styles.startButton} onPress={onPressButton}>
-          TRY AGAIN
-        </Button>
-      </View>
-    );
   };
 
   const renderCurrentPhaseAnswers = () => {
@@ -175,9 +186,7 @@ export const QuizBegin = ({route, navigation}: any) => {
         <Text category="h1" style={styles.title}>
           Who Sings?
         </Text>
-        {questions[currentPhase] != null
-          ? renderCurrentPhaseBody()
-          : renderQuizEnd()}
+        {renderCurrentPhaseBody()}
       </Layout>
     </Layout>
   );
