@@ -1,4 +1,4 @@
-export const pickShuffled = (elements: Array<any>, picks: number) => {
+const pickShuffled = (elements: Array<any>, picks: number) => {
   let currentIndex = elements.length,
     temporaryValue,
     randomIndex;
@@ -14,3 +14,5 @@ export const pickShuffled = (elements: Array<any>, picks: number) => {
 
   return elements.slice(0, picks);
 };
+
+export default pickShuffled;
