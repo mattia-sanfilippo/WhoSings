@@ -23,10 +23,10 @@ export type Questions = Question[];
 
 export type Question = {
   text: string;
-  answers: Answer;
+  answers: Answer[];
 };
 
 export type Answer = {
-  text: string;
+  artist: Artist;
   correct: boolean;
 };
