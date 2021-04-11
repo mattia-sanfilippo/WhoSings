@@ -1,5 +1,5 @@
-import React, {useCallback, useEffect} from 'react';
-import {Button, Layout, Text} from '@ui-kitten/components';
+import React, {useCallback, useEffect, useState} from 'react';
+import {Button, Input, Layout, Text} from '@ui-kitten/components';
 import {styles} from './styles';
 import {RootState} from 'src/shared/store/configureStore';
 import {useDispatch, useSelector} from 'react-redux';
@@ -8,6 +8,7 @@ import {useNavigation} from '@react-navigation/core';
 
 export const Quiz = () => {
   const {loading, failure} = useSelector((state: RootState) => state.quiz);
+  const [name, setName] = useState('');
 
   const dispatch = useDispatch();
   const navigation = useNavigation();
@@ -17,8 +18,10 @@ export const Quiz = () => {
   }, [dispatch]);
 
   const onPressButton = useCallback(() => {
-    navigation.navigate('QuizBegin');
-  }, [navigation]);
+    navigation.navigate('QuizBegin', {
+      nickname: name,
+    });
+  }, [name, navigation]);
 
   if (loading) {
     return <Text>Loading...</Text>;
@@ -35,7 +38,17 @@ export const Quiz = () => {
           Who Sings?
         </Text>
         <Layout level="1" style={styles.quizContainer}>
-          <Button style={styles.startButton} onPress={onPressButton}>
+          <Input
+            style={styles.startButton}
+            value={name}
+            label="Username"
+            placeholder="Type your username"
+            onChangeText={(nextName) => setName(nextName)}
+          />
+          <Button
+            style={styles.startButton}
+            onPress={onPressButton}
+            disabled={name === ''}>
             START
           </Button>
         </Layout>

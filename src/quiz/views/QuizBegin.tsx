@@ -7,11 +7,26 @@ import {RootState} from 'src/shared/store/configureStore';
 import {getQuestions, getSnippets} from '../quiz.actions';
 import {Answer} from '../quiz.types';
 import feedbackPresenter from '../../shared/utils/feedbackPresenter';
-import {useNavigation} from '@react-navigation/native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 type QuizAnswerProps = {
   answer: Answer;
   onPress: () => void;
+};
+
+const submitRank = async (nickname: string, points: number) => {
+  try {
+    const result = await AsyncStorage.getItem('@leaderboard');
+    if (result) {
+      let rank = JSON.parse(result);
+      if (!rank) {
+        rank = [];
+      }
+      rank.push({nickname, points});
+    }
+  } catch (error) {
+    feedbackPresenter('error', 'Error', "Couldn't save your points.");
+  }
 };
 
 const Answers = (props: {renderAnswers: () => JSX.Element[]}) => {
@@ -61,18 +76,19 @@ const Question = (props: {question: string; counter: number}) => {
   );
 };
 
-export const QuizBegin = () => {
+export const QuizBegin = ({route, navigation}: any) => {
   const {tracks, artists} = useSelector((state: RootState) => state.quiz);
   const {snippets, questions, loading, failure} = useSelector(
     (state: RootState) => state.quizBegin,
   );
+
+  const {nickname} = route.params;
 
   const [currentPhase, setCurrentPhase] = useState(0);
   const [points, setPoints] = useState(0);
   const [counter, setCounter] = useState(10);
 
   const dispatch = useDispatch();
-  const navigation = useNavigation();
 
   useEffect(() => {
     dispatch(getSnippets(tracks));
@@ -120,6 +136,7 @@ export const QuizBegin = () => {
   };
 
   const renderQuizEnd = () => {
+    submitRank(nickname, points);
     return (
       <View style={styles.cardContent}>
         <Text category="h4">Quiz ended!</Text>
