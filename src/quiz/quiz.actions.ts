@@ -27,12 +27,7 @@ export const getTracks = () => {
 };
 
 export const getSnippets = (tracks: Tracks) => {
-  const artists = tracks.map((track) => {
-    return {
-      id: track.artist.id,
-      name: track.artist.name,
-    };
-  });
+  const artists = mapArtistsFromTracks(tracks);
   const requests = tracks.map((track) => {
     return axios.get(`${MUSIXMATCH_API_URL}/track.snippet.get`, {
       params: {
@@ -56,15 +51,7 @@ export const getSnippets = (tracks: Tracks) => {
 export const getQuestions = (snippets: TrackSnippet[], artists: Artist[]) => {
   const questions = snippets.map((snippet): any => {
     const randomArtists = pickShuffled(artists, 2);
-    const randomAnswers = randomArtists.map((randomArtist) => {
-      return {
-        artist: {
-          id: randomArtist.id,
-          name: randomArtist.name,
-        },
-        correct: randomArtist.id === snippet.artist.id ? true : false,
-      };
-    });
+    const randomAnswers = generateRandomAnswers(randomArtists, snippet);
     return {
       text: snippet.body,
       answers: pickShuffled(
@@ -119,4 +106,28 @@ const setTracks = (data: any, error?: Error) => {
     payload: data,
     failure: error,
   };
+};
+
+const generateRandomAnswers = (
+  randomArtists: Artist[],
+  snippet: TrackSnippet,
+) => {
+  return randomArtists.map((randomArtist) => {
+    return {
+      artist: {
+        id: randomArtist.id,
+        name: randomArtist.name,
+      },
+      correct: randomArtist.id === snippet.artist.id ? true : false,
+    };
+  });
+};
+
+const mapArtistsFromTracks = (tracks: Tracks) => {
+  return tracks.map((track) => {
+    return {
+      id: track.artist.id,
+      name: track.artist.name,
+    };
+  });
 };
