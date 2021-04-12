@@ -1,4 +1,9 @@
-import {GET_QUESTIONS, GET_SNIPPETS, QUESTIONS_NUMBER} from '../quiz.constants';
+import {
+  CLEAR_QUESTIONS,
+  GET_QUESTIONS,
+  GET_SNIPPETS,
+  QUESTIONS_NUMBER,
+} from '../quiz.constants';
 import {Questions, TrackSnippet} from '../quiz.types';
 
 export type QuizState = {
@@ -48,6 +53,11 @@ export const quizBeginReducer = (
         loading: false,
         failure: undefined,
         questions: action.payload,
+      };
+    case CLEAR_QUESTIONS:
+      return {
+        ...state,
+        questions: [],
       };
     default:
       return {

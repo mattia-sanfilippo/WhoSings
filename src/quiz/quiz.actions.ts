@@ -1,7 +1,12 @@
 import axios, {AxiosResponse} from 'axios';
 import {MUSIXMATCH_API_URL, MUSIXMATCH_API_KEY} from '@env';
 import {Artist, Tracks, TrackSnippet} from './quiz.types';
-import {GET_QUESTIONS, GET_SNIPPETS, GET_TRACKS} from './quiz.constants';
+import {
+  CLEAR_QUESTIONS,
+  GET_QUESTIONS,
+  GET_SNIPPETS,
+  GET_TRACKS,
+} from './quiz.constants';
 import pickShuffled from '../../src/shared/utils/pickShuffled';
 
 export const getTracks = () => {
@@ -77,6 +82,14 @@ const setQuestions = (data: any, error?: Error) => {
     type: GET_QUESTIONS,
     payload: data,
     failure: error,
+  };
+};
+
+export const clearQuestions = () => {
+  return {
+    type: CLEAR_QUESTIONS,
+    payload: undefined,
+    failure: undefined,
   };
 };
 
