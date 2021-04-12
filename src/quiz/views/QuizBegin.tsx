@@ -1,20 +1,16 @@
 import React, {FC, useCallback, useEffect, useState} from 'react';
-import {Button, Card, Layout, Spinner, Text} from '@ui-kitten/components';
+import {Button, Layout, Spinner, Text} from '@ui-kitten/components';
 import {View} from 'react-native';
 import {styles} from './styles';
 import {useDispatch, useSelector} from 'react-redux';
 import {RootState} from 'src/shared/store/configureStore';
 import {getQuestions, getSnippets} from '../quiz.actions';
-import {Answer} from '../quiz.types';
 import feedbackPresenter from '../../shared/utils/feedbackPresenter';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Title from '../../components/Title';
 import ErrorMessage from '../../components/ErrorMessage';
-
-type QuizAnswerProps = {
-  answer: Answer;
-  onPress: () => void;
-};
+import QuizAnswer from '../components/QuizAnswer';
+import Question from '../components/Question';
 
 const submitRank = async (nickname: string, points: number) => {
   try {
@@ -36,43 +32,10 @@ const submitRank = async (nickname: string, points: number) => {
   }
 };
 
-const Answers = (props: {renderAnswers: () => JSX.Element[]}) => {
-  return <View style={styles.quizContainer}>{props.renderAnswers()}</View>;
-};
-
-const QuizAnswer = ({answer, onPress}: QuizAnswerProps) => {
-  return (
-    <Card onPress={onPress} style={styles.quizCard}>
-      <View style={styles.cardContent}>
-        <Text>{answer.artist.name}</Text>
-      </View>
-    </Card>
-  );
-};
-
 const showFeedback = (correct: boolean) => {
   correct
     ? feedbackPresenter('success', 'Correct', 'You rock!')
     : feedbackPresenter('error', 'Wrong answer', 'Focus on it!');
-};
-
-const Timer = (props: {counter: number}) => {
-  return (
-    <Text category="h6" appearance="hint">
-      {props.counter}
-    </Text>
-  );
-};
-
-const Question = (props: {question: string; counter: number}) => {
-  return (
-    <Card style={styles.mainCard} disabled>
-      <View style={styles.cardContent}>
-        <Text category="h5">{props.question}</Text>
-        <Timer counter={props.counter} />
-      </View>
-    </Card>
-  );
 };
 
 const QuizEndView = (props: {points: number; onPressButton: () => void}) => {
@@ -97,18 +60,21 @@ export const QuizBegin: FC = ({navigation}: any) => {
   const [currentPhase, setCurrentPhase] = useState(0);
   const [points, setPoints] = useState(0);
   const [counter, setCounter] = useState(10);
+  const [isActive, setIsActive] = useState(true);
 
   const dispatch = useDispatch();
 
   useEffect(() => {
-    dispatch(getSnippets(tracks));
-  }, [dispatch, tracks]);
+    if (isActive) {
+      dispatch(getSnippets(tracks));
+    }
+  }, [dispatch, isActive, tracks]);
 
   useEffect(() => {
-    if (snippets.length !== 0) {
+    if (snippets.length !== 0 && isActive) {
       dispatch(getQuestions(snippets, artists));
     }
-  }, [artists, dispatch, snippets]);
+  }, [artists, dispatch, isActive, snippets]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -120,9 +86,11 @@ export const QuizBegin: FC = ({navigation}: any) => {
       showFeedback(false);
     } else if (counter === 0) {
       clearInterval(interval);
+      setIsActive(false);
     }
     return () => {
       clearInterval(interval);
+      setIsActive(false);
     };
   }, [counter, currentPhase, points, questions]);
 
@@ -142,7 +110,7 @@ export const QuizBegin: FC = ({navigation}: any) => {
   if (failure) {
     return (
       <ErrorMessage
-        message="Something bad happened!"
+        message="An error happened!"
         buttonMessage="GO BACK"
         onPressButton={onPressErrorButton}
       />
@@ -162,27 +130,20 @@ export const QuizBegin: FC = ({navigation}: any) => {
     }
   };
 
-  const renderCurrentPhaseAnswers = () => {
-    return questions[currentPhase].answers.map((answer, index) => {
-      return (
-        <QuizAnswer
-          answer={answer}
-          key={index}
-          onPress={() => answerQuestion(answer.correct)}
-        />
-      );
-    });
-  };
-
   const renderCurrentPhaseBody = () => {
     const question = questions[currentPhase].text;
     return (
       <Layout level="1">
         <Question question={question} counter={counter} key={currentPhase} />
-        <Answers
-          renderAnswers={renderCurrentPhaseAnswers}
-          key={`answers${currentPhase}`}
-        />
+        <View key={`answers${currentPhase}`}>
+          {questions[currentPhase].answers.map((answer, index) => (
+            <QuizAnswer
+              answer={answer}
+              key={index}
+              onPress={() => answerQuestion(answer.correct)}
+            />
+          ))}
+        </View>
       </Layout>
     );
   };
