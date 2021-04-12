@@ -58,6 +58,8 @@ export const quizBeginReducer = (
       return {
         ...state,
         questions: [],
+        loading: true,
+        failure: undefined,
       };
     default:
       return {
