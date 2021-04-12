@@ -8,6 +8,7 @@ import {useNavigation} from '@react-navigation/core';
 import {getUser, logInUser} from '../../user/user.actions';
 import Title from '../../components/Title';
 import ErrorMessage from '../../components/ErrorMessage';
+import {Image} from 'react-native';
 
 export const Quiz: FC = () => {
   const {loading, failure} = useSelector((state: RootState) => state.quiz);
@@ -57,6 +58,10 @@ export const Quiz: FC = () => {
       <Layout level="2">
         <Title title="Who Sings?" />
         <Layout level="1" style={styles.quizContainer}>
+          <Image
+            source={require('../../assets/happy-music.png')}
+            style={styles.image}
+          />
           {!isLoggedIn && (
             <Input
               style={styles.startButton}

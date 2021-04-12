@@ -30,4 +30,9 @@ export const styles = StyleSheet.create({
   startButton: {
     margin: 10,
   },
+  image: {
+    width: 128,
+    height: 128,
+    alignSelf: 'center',
+  },
 });
