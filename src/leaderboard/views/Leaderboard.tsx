@@ -1,10 +1,12 @@
-import React, {FC, useEffect} from 'react';
-import {ListItem, Text} from '@ui-kitten/components';
+import React, {FC, useCallback, useEffect} from 'react';
+import {ListItem, Spinner} from '@ui-kitten/components';
 import {FlatList, View} from 'react-native';
 import {useDispatch, useSelector} from 'react-redux';
 import {RootState} from 'src/shared/store/configureStore';
 import {getLeaderboard} from '../leaderboard.actions';
 import {Rank} from '../leaderboard.types';
+import Title from '../../components/Title';
+import ErrorMessage from '../../components/ErrorMessage';
 
 export const Leaderboard: FC = () => {
   const {leaderboard, loading, failure} = useSelector(
@@ -17,6 +19,10 @@ export const Leaderboard: FC = () => {
     dispatch(getLeaderboard());
   };
 
+  const onPressRetry = useCallback(() => {
+    dispatch(getLeaderboard());
+  }, [dispatch]);
+
   useEffect(() => {
     dispatch(getLeaderboard());
   }, [dispatch]);
@@ -27,10 +33,16 @@ export const Leaderboard: FC = () => {
 
   const renderContent = () => {
     if (loading) {
-      return <Text>Loading...</Text>;
+      return <Spinner />;
     }
     if (failure) {
-      return <Text>There was an error</Text>;
+      return (
+        <ErrorMessage
+          message="There was an error"
+          buttonMessage="Retry"
+          onPressButton={onPressRetry}
+        />
+      );
     }
     return (
       <FlatList
@@ -46,7 +58,7 @@ export const Leaderboard: FC = () => {
   return (
     <View>
       <View>
-        <Text category="h1">Leaderboard</Text>
+        <Title title="Leaderboard" />
       </View>
       <View>{renderContent()}</View>
     </View>
