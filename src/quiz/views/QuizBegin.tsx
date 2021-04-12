@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {FC, useCallback, useEffect, useState} from 'react';
 import {Button, Card, Layout, Text} from '@ui-kitten/components';
 import {View} from 'react-native';
 import {styles} from './styles';
@@ -21,7 +21,7 @@ const submitRank = async (nickname: string, points: number) => {
     if (result !== null) {
       rank = JSON.parse(result);
     }
-    rank.push({nickname, points});
+    rank.push({playerName: nickname, points});
     await AsyncStorage.setItem('leaderboard', JSON.stringify(rank));
     feedbackPresenter(
       'success',
@@ -93,7 +93,7 @@ const QuizEndView = (props: {points: number; onPressButton: () => void}) => {
   );
 };
 
-export const QuizBegin = ({route, navigation}: any) => {
+export const QuizBegin: FC = ({route, navigation}: any) => {
   const {tracks, artists} = useSelector((state: RootState) => state.quiz);
   const {snippets, questions, loading, failure} = useSelector(
     (state: RootState) => state.quizBegin,
