@@ -88,7 +88,7 @@ const setQuestions = (data: any, error?: Error) => {
 export const clearQuestions = () => {
   return {
     type: CLEAR_QUESTIONS,
-    payload: undefined,
+    payload: null,
     failure: undefined,
   };
 };
