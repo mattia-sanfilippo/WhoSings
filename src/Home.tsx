@@ -36,13 +36,9 @@ const HomeStack = createStackNavigator();
 
 const Home = () => {
   return (
-    <HomeStack.Navigator>
+    <HomeStack.Navigator headerMode="none">
       <HomeStack.Screen name="Quiz" component={Quiz} />
-      <HomeStack.Screen
-        name="QuizBegin"
-        component={QuizBegin}
-        options={{title: 'Find the artist!'}}
-      />
+      <HomeStack.Screen name="QuizBegin" component={QuizBegin} />
     </HomeStack.Navigator>
   );
 };
