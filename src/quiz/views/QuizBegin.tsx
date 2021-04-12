@@ -1,5 +1,5 @@
 import React, {FC, useCallback, useEffect, useState} from 'react';
-import {Button, Card, Layout, Text} from '@ui-kitten/components';
+import {Button, Card, Layout, Spinner, Text} from '@ui-kitten/components';
 import {View} from 'react-native';
 import {styles} from './styles';
 import {useDispatch, useSelector} from 'react-redux';
@@ -8,6 +8,8 @@ import {getQuestions, getSnippets} from '../quiz.actions';
 import {Answer} from '../quiz.types';
 import feedbackPresenter from '../../shared/utils/feedbackPresenter';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Title from '../../components/Title';
+import ErrorMessage from '../../components/ErrorMessage';
 
 type QuizAnswerProps = {
   answer: Answer;
@@ -48,14 +50,6 @@ const QuizAnswer = ({answer, onPress}: QuizAnswerProps) => {
   );
 };
 
-const Loading = () => {
-  return <Text>Loading...</Text>;
-};
-
-const Failure = () => {
-  return <Text>Something bad happened.</Text>;
-};
-
 const showFeedback = (correct: boolean) => {
   correct
     ? feedbackPresenter('success', 'Correct', 'You rock!')
@@ -93,13 +87,12 @@ const QuizEndView = (props: {points: number; onPressButton: () => void}) => {
   );
 };
 
-export const QuizBegin: FC = ({route, navigation}: any) => {
+export const QuizBegin: FC = ({navigation}: any) => {
   const {tracks, artists} = useSelector((state: RootState) => state.quiz);
+  const {user} = useSelector((state: RootState) => state.user);
   const {snippets, questions, loading, failure} = useSelector(
     (state: RootState) => state.quizBegin,
   );
-
-  const {nickname} = route.params;
 
   const [currentPhase, setCurrentPhase] = useState(0);
   const [points, setPoints] = useState(0);
@@ -131,19 +124,29 @@ export const QuizBegin: FC = ({route, navigation}: any) => {
     return () => {
       clearInterval(interval);
     };
-  }, [counter, currentPhase, nickname, points, questions]);
+  }, [counter, currentPhase, points, questions]);
 
   const onPressButton = useCallback(() => {
-    submitRank(nickname, points);
-    navigation.navigate('Quiz');
-  }, [navigation, nickname, points]);
+    submitRank(user, points);
+    navigation.replace('Quiz');
+  }, [navigation, user, points]);
+
+  const onPressErrorButton = useCallback(() => {
+    navigation.replace('Quiz');
+  }, [navigation]);
 
   if (loading) {
-    return <Loading />;
+    return <Spinner />;
   }
 
   if (failure) {
-    return <Failure />;
+    return (
+      <ErrorMessage
+        message="Something bad happened!"
+        buttonMessage="GO BACK"
+        onPressButton={onPressErrorButton}
+      />
+    );
   }
 
   if (questions[currentPhase] == null) {
@@ -160,10 +163,11 @@ export const QuizBegin: FC = ({route, navigation}: any) => {
   };
 
   const renderCurrentPhaseAnswers = () => {
-    return questions[currentPhase].answers.map((answer) => {
+    return questions[currentPhase].answers.map((answer, index) => {
       return (
         <QuizAnswer
           answer={answer}
+          key={index}
           onPress={() => answerQuestion(answer.correct)}
         />
       );
@@ -174,8 +178,11 @@ export const QuizBegin: FC = ({route, navigation}: any) => {
     const question = questions[currentPhase].text;
     return (
       <Layout level="1">
-        <Question question={question} counter={counter} />
-        <Answers renderAnswers={renderCurrentPhaseAnswers} />
+        <Question question={question} counter={counter} key={currentPhase} />
+        <Answers
+          renderAnswers={renderCurrentPhaseAnswers}
+          key={`answers${currentPhase}`}
+        />
       </Layout>
     );
   };
@@ -183,9 +190,7 @@ export const QuizBegin: FC = ({route, navigation}: any) => {
   return (
     <Layout level="3">
       <Layout level="2">
-        <Text category="h1" style={styles.title}>
-          Who Sings?
-        </Text>
+        <Title title="Who Sings?" />
         {renderCurrentPhaseBody()}
       </Layout>
     </Layout>
