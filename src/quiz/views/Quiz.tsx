@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {FC, useCallback, useEffect, useState} from 'react';
 import {Button, Input, Layout, Text} from '@ui-kitten/components';
 import {styles} from './styles';
 import {RootState} from 'src/shared/store/configureStore';
@@ -6,7 +6,7 @@ import {useDispatch, useSelector} from 'react-redux';
 import {getTracks} from '../quiz.actions';
 import {useNavigation} from '@react-navigation/core';
 
-export const Quiz = () => {
+export const Quiz: FC = () => {
   const {loading, failure} = useSelector((state: RootState) => state.quiz);
   const [name, setName] = useState('');
 
