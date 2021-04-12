@@ -1,5 +1,5 @@
 import React, {FC, useCallback, useEffect, useState} from 'react';
-import {Button, Input, Layout, Spinner, Text} from '@ui-kitten/components';
+import {Button, Input, Layout, Spinner} from '@ui-kitten/components';
 import {styles} from './styles';
 import {RootState} from 'src/shared/store/configureStore';
 import {useDispatch, useSelector} from 'react-redux';
@@ -7,6 +7,7 @@ import {getTracks} from '../quiz.actions';
 import {useNavigation} from '@react-navigation/core';
 import {getUser, logInUser} from '../../user/user.actions';
 import Title from '../../components/Title';
+import ErrorMessage from '../../components/ErrorMessage';
 
 export const Quiz: FC = () => {
   const {loading, failure} = useSelector((state: RootState) => state.quiz);
@@ -24,6 +25,11 @@ export const Quiz: FC = () => {
     dispatch(getUser());
   }, [dispatch]);
 
+  const onPressTryAgain = useCallback(() => {
+    dispatch(getTracks());
+    dispatch(getUser());
+  }, [dispatch]);
+
   const onPressButton = useCallback(() => {
     !isLoggedIn
       ? dispatch(logInUser(name, navigation, 'QuizBegin'))
@@ -37,7 +43,13 @@ export const Quiz: FC = () => {
   }
 
   if (failure || failureUser) {
-    return <Text>There was an error</Text>;
+    return (
+      <ErrorMessage
+        message="An error happened."
+        buttonMessage="TRY AGAIN"
+        onPressButton={onPressTryAgain}
+      />
+    );
   }
 
   return (
