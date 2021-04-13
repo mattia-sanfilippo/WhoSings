@@ -12,13 +12,16 @@ import * as eva from '@eva-design/eva';
 import {AppNavigator} from './src/Home';
 import {Provider} from 'react-redux';
 import {store} from './src/shared/store/configureStore';
+import {SafeAreaView} from 'react-native';
 
 export default (): React.ReactFragment => (
   <>
     <IconRegistry icons={EvaIconsPack} />
     <ApplicationProvider {...eva} theme={eva.light}>
       <Provider store={store}>
-        <AppNavigator />
+        <SafeAreaView style={{flex: 1}}>
+          <AppNavigator />
+        </SafeAreaView>
       </Provider>
     </ApplicationProvider>
   </>
