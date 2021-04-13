@@ -7,6 +7,7 @@ import {getLeaderboard} from '../leaderboard.actions';
 import {Rank} from '../leaderboard.types';
 import Title from '../../components/Title';
 import ErrorMessage from '../../components/ErrorMessage';
+import {styles} from '../../profile/views/styles';
 
 export const Leaderboard: FC = () => {
   const {leaderboard, loading, failure} = useSelector(
@@ -51,16 +52,15 @@ export const Leaderboard: FC = () => {
         keyExtractor={(item, index) => index.toString()}
         refreshing={loading}
         onRefresh={onRefresh}
+        style={styles.flatList}
       />
     );
   };
 
   return (
     <View>
-      <View>
-        <Title title="Leaderboard" />
-      </View>
-      <View>{renderContent()}</View>
+      <Title title="Leaderboard" />
+      {renderContent()}
     </View>
   );
 };

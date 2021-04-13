@@ -83,6 +83,7 @@ export const Profile: FC = () => {
           onRefresh={onRefresh}
           ListFooterComponent={<View />}
           ListFooterComponentStyle={styles.listSpace}
+          style={styles.flatList}
         />
       </View>
     );

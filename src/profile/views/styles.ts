@@ -12,4 +12,7 @@ export const styles = StyleSheet.create({
   listSpace: {
     marginBottom: 24,
   },
+  flatList: {
+    minHeight: 600,
+  },
 });
